@@ -1,8 +1,54 @@
+import 'package:currencyconverter/app/controller/home_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
-class CurrencyInput extends StatelessWidget {
-  const CurrencyInput({super.key});
+class CurrencyInput extends StatefulWidget {
+  final HomeController singletonController;
+  final TextEditingController input;
+  final bool isFromInput;
+
+  const CurrencyInput(
+      {super.key,
+      required this.singletonController,
+      required this.isFromInput,
+      required this.input});
+
+  @override
+  State<CurrencyInput> createState() => _CurrencyInputState();
+}
+
+class _CurrencyInputState extends State<CurrencyInput> {
+  String selectedCurrency = '';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isFromInput) {
+      selectedCurrency = 'BRL';
+      widget.singletonController.setFromCurrency(selectedCurrency);
+      return;
+    }
+    selectedCurrency = 'USD';
+    widget.singletonController.setToCurrency(selectedCurrency);
+  }
+
+  List<DropdownMenuItem<String>> getDropdownItems() {
+    List<DropdownMenuItem<String>> items = [];
+    for (String currency in widget.singletonController.currencies) {
+      items.add(DropdownMenuItem(
+        value: currency,
+        child: Text(currency),
+      ));
+    }
+    return items;
+  }
+
+  UnderlineInputBorder defaultBorder() {
+    return const UnderlineInputBorder(
+      borderSide: BorderSide(
+        color: Colors.amber,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,14 +65,18 @@ class CurrencyInput extends StatelessWidget {
                 color: Colors.amber,
               ),
               isExpanded: true,
-              items: const [
-                DropdownMenuItem(
-                  value: 'USD',
-                  child: Text('USD'),
-                ),
-              ],
+              value: selectedCurrency,
+              items: getDropdownItems(),
               onChanged: (value) {
-                //!not implemented
+                setState(() {
+                  selectedCurrency = value.toString();
+                  if (widget.isFromInput) {
+                    widget.singletonController
+                        .setFromCurrency(selectedCurrency);
+                  } else {
+                    widget.singletonController.setToCurrency(selectedCurrency);
+                  }
+                });
               },
             ),
           ),
@@ -34,23 +84,19 @@ class CurrencyInput extends StatelessWidget {
         const SizedBox(
           width: 10,
         ),
-        const Flexible(
+        Flexible(
           flex: 4,
           child: TextField(
+            enabled: widget.isFromInput ? true : false,
+            controller: widget.input,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              hintText: "Valor da moeda",
-              border: UnderlineInputBorder(),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                  color: Colors.amber,
-                ),
-              ),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(
-                  color: Colors.amber,
-                ),
-              ),
+              hintText:
+                  widget.isFromInput ? "Valor da moeda" : "Valor convertido",
+              border: const UnderlineInputBorder(),
+              focusedBorder: defaultBorder(),
+              enabledBorder: defaultBorder(),
+              disabledBorder: defaultBorder(),
             ),
           ),
         ),
